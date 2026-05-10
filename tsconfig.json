@@ -42,10 +42,10 @@
   "exclude": [
     "node_modules",
     "dist",
+    "src/capabilities/*/infrastructure/timer-worker.js",
     "src/**/*.rtk.ts",
     "src/**/*.rtk.tsx",
     "src/**/*.zustand.ts",
     "src/**/*.zustand.tsx",
-    "src/**/*.context.tsx"
   ]
 }

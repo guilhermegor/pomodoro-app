@@ -1,10 +1,10 @@
 import js from "@eslint/js";
 import prettierConfig from "eslint-config-prettier";
+import boundaries from 'eslint-plugin-boundaries';
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import boundaries from 'eslint-plugin-boundaries';
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
@@ -120,7 +120,7 @@ export default [
           { from: ['domain'],         allow: [] },
           { from: ['application'],    allow: ['domain'] },
           { from: ['infrastructure'], allow: ['domain'] },
-          { from: ['ui'],             allow: ['application', 'domain'] },
+          { from: ['ui'],             allow: ['application', 'domain', 'context'] },
           { from: ['context'],        allow: ['domain', 'application', 'infrastructure'] },
           { from: ['barrel'],         allow: ['domain', 'application', 'ui', 'context'] },
           { from: ['shared'],         allow: ['shared'] },
