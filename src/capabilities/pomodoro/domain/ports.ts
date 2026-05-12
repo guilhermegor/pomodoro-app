@@ -1,5 +1,10 @@
+export type TimerWorkerInput = {
+  activeTask: { startDate: number } | null;
+  secondsRemaining: number;
+};
+
 export interface ITimerWorker {
-  postMessage(message: unknown): void;
-  onmessage(cb: (e: MessageEvent) => void): void;
+  postMessage(input: TimerWorkerInput): void;
+  onmessage(cb: (secondsRemaining: number) => void): void;
   terminate(): void;
 }

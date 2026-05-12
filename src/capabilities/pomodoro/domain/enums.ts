@@ -1,4 +1,4 @@
-export type CycleType = 'workTime' | 'shortBreak' | 'longBreakTime';
+export type CycleType = 'workTime' | 'shortBreakTime' | 'longBreakTime';
 
 export enum TaskActionTypes {
   START_TASK = 'START_TASK',
