@@ -13,13 +13,13 @@ Pure types and contracts that describe the **vocabulary of the
 capability**. Nothing in this layer runs at runtime in a meaningful
 sense — it's the shape language used by the other three layers.
 
-| Lives here | Does not live here |
-|---|---|
-| `entities.ts` — entity types (`TaskModel`, `Note`) | `useState`, `useReducer`, any hook |
-| `enums.ts` — enums and union types (`CycleType`, `TaskActionTypes`) | `fetch`, `localStorage`, Worker |
-| `ports.ts` — interfaces that infrastructure implements | Reducers, factories, use cases |
-| `dto.ts` — input/output shapes at capability boundaries | JSX, CSS, route definitions |
-| Branded types, value objects, exhaustive unions | Side effects of any kind |
+| Lives here                                                          | Does not live here                 |
+| ------------------------------------------------------------------- | ---------------------------------- |
+| `entities.ts` — entity types (`TaskModel`, `Note`)                  | `useState`, `useReducer`, any hook |
+| `enums.ts` — enums and union types (`CycleType`, `TaskActionTypes`) | `fetch`, `localStorage`, Worker    |
+| `ports.ts` — interfaces that infrastructure implements              | Reducers, factories, use cases     |
+| `dto.ts` — input/output shapes at capability boundaries             | JSX, CSS, route definitions        |
+| Branded types, value objects, exhaustive unions                     | Side effects of any kind           |
 
 The litmus test: **a domain file should have zero imports** (or only
 type-only imports from other domain files). If a file in this layer
@@ -30,10 +30,10 @@ third-party library at runtime, it does not belong here.
 
 Domain files can import:
 
-| From | To | Why |
-|---|---|---|
-| `domain/*` | Other `domain/*` files (type-only) | Compose entity types from enums, etc. |
-| `domain/*` | **Nothing else** | Domain is the bottom of the dependency graph |
+| From       | To                                 | Why                                          |
+| ---------- | ---------------------------------- | -------------------------------------------- |
+| `domain/*` | Other `domain/*` files (type-only) | Compose entity types from enums, etc.        |
+| `domain/*` | **Nothing else**                   | Domain is the bottom of the dependency graph |
 
 `type` imports between domain files are fine and encouraged:
 
@@ -56,12 +56,12 @@ domain — and the architecture's promise breaks.
 
 ## File responsibilities
 
-| File | Contains | Does not contain |
-|---|---|---|
-| `entities.ts` | Entity types (the nouns of the capability) | State shapes (`*StateModel` — those are application) |
-| `enums.ts` | Enums (`CycleType`), action type enums (`TaskActionTypes`) | Action shape unions (those are application) |
-| `ports.ts` | Interfaces that infrastructure adapters implement | Concrete classes, implementations |
-| `dto.ts` | Input DTOs (`CreateTaskDto`), output DTOs at capability boundaries | Internal data shapes (those are entities) |
+| File          | Contains                                                           | Does not contain                                     |
+| ------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
+| `entities.ts` | Entity types (the nouns of the capability)                         | State shapes (`*StateModel` — those are application) |
+| `enums.ts`    | Enums (`CycleType`), action type enums (`TaskActionTypes`)         | Action shape unions (those are application)          |
+| `ports.ts`    | Interfaces that infrastructure adapters implement                  | Concrete classes, implementations                    |
+| `dto.ts`      | Input DTOs (`CreateTaskDto`), output DTOs at capability boundaries | Internal data shapes (those are entities)            |
 
 **Why split into multiple files instead of one `domain.ts`:** each file
 has a single responsibility, and the names communicate intent at the
@@ -107,10 +107,10 @@ Three rules for ports:
 
 DTOs describe data **crossing the capability boundary**:
 
-| DTO direction | Purpose | Example |
-|---|---|---|
-| Inbound | Input from UI form, command from outside the capability | `CreateTaskDto`, `UpdateSettingsDto` |
-| Outbound | Data returned to UI, projection for external consumer | `TaskSummaryDto` (subset of `TaskModel` safe for listing) |
+| DTO direction | Purpose                                                 | Example                                                   |
+| ------------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| Inbound       | Input from UI form, command from outside the capability | `CreateTaskDto`, `UpdateSettingsDto`                      |
+| Outbound      | Data returned to UI, projection for external consumer   | `TaskSummaryDto` (subset of `TaskModel` safe for listing) |
 
 DTOs are **narrower than entities** — they only include what crosses
 the boundary. A `CreateTaskDto` has `name` (from the form input); the
@@ -132,14 +132,14 @@ that case.
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Use `type` for entities and DTOs | Use `class` for entities (entities are values, not behavior holders) |
-| Use `interface` for ports (so adapters can `implements`) | Use `type` for ports (loses `implements` ergonomics) |
-| Split into `entities.ts`, `enums.ts`, `ports.ts`, `dto.ts` | One mega `domain.ts` file |
-| Keep imports type-only and within `domain/` | Import from `application/` or `infrastructure/` |
-| Branded / nominal types for IDs (`type TaskId = string & { __brand: 'TaskId' }`) | Pass raw `string` everywhere and hope IDs don't get swapped |
-| Enums for closed sets (`CycleType`, action types) | Magic strings sprinkled across the codebase |
+| Do                                                                               | Don't                                                                |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Use `type` for entities and DTOs                                                 | Use `class` for entities (entities are values, not behavior holders) |
+| Use `interface` for ports (so adapters can `implements`)                         | Use `type` for ports (loses `implements` ergonomics)                 |
+| Split into `entities.ts`, `enums.ts`, `ports.ts`, `dto.ts`                       | One mega `domain.ts` file                                            |
+| Keep imports type-only and within `domain/`                                      | Import from `application/` or `infrastructure/`                      |
+| Branded / nominal types for IDs (`type TaskId = string & { __brand: 'TaskId' }`) | Pass raw `string` everywhere and hope IDs don't get swapped          |
+| Enums for closed sets (`CycleType`, action types)                                | Magic strings sprinkled across the codebase                          |
 
 ## Testing notes specific to this layer
 

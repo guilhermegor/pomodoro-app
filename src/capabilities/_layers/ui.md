@@ -20,26 +20,26 @@ rest of the capability. The UI's job is to:
 That's it. No business rules, no fetch calls, no localStorage —
 those belong in `application/` and `infrastructure/`.
 
-| Lives here | Does not live here |
-|---|---|
-| Components (`MainForm.tsx`, `CountDown.tsx`) | Reducers, action types |
-| Pages (`HomePage.tsx`, `HistoryPage.tsx`) | Worker / fetch / localStorage adapters |
-| CSS Modules (`*.module.css`) | State shapes, factories |
-| Local view-only `useState` (form input, modal open) | Cross-component shared state (use context) |
-| Calls to use-case hooks from `application/` | Direct calls to `infrastructure/` from a component |
+| Lives here                                          | Does not live here                                 |
+| --------------------------------------------------- | -------------------------------------------------- |
+| Components (`MainForm.tsx`, `CountDown.tsx`)        | Reducers, action types                             |
+| Pages (`HomePage.tsx`, `HistoryPage.tsx`)           | Worker / fetch / localStorage adapters             |
+| CSS Modules (`*.module.css`)                        | State shapes, factories                            |
+| Local view-only `useState` (form input, modal open) | Cross-component shared state (use context)         |
+| Calls to use-case hooks from `application/`         | Direct calls to `infrastructure/` from a component |
 
 ## Imports — the hard rule
 
 UI files **can** import from:
 
-| From | To | Why |
-|---|---|---|
-| `ui/*` | `../domain/entities`, `../domain/enums`, `../domain/dto` | Render and accept typed data |
-| `ui/*` | `../application/use-cases`, `../application/task-utils` | Trigger intents, format data |
-| `ui/*` | `../context.tsx` (or wherever the capability context lives) | Read state, dispatch |
-| `ui/*` | `@/shared/components/*`, `@/shared/templates/*` | Reuse generic UI primitives |
-| `ui/*` | Other `ui/*` files in the same capability | Capability-internal composition |
-| `ui/*` | Third-party UI libs (`lucide-react`, etc.) | Icon and primitive imports |
+| From   | To                                                                                    | Why                             |
+| ------ | ------------------------------------------------------------------------------------- | ------------------------------- |
+| `ui/*` | `../domain/entities`, `../domain/enums`, `../domain/dto`                              | Render and accept typed data    |
+| `ui/*` | `../application/use-cases`, `../application/task-utils`                               | Trigger intents, format data    |
+| `ui/*` | The capability's context hook file (`../use-task-context`, `../use-context`)          | Read state, dispatch via the hook |
+| `ui/*` | `@/shared/components/*`, `@/shared/templates/*`                                       | Reuse generic UI primitives     |
+| `ui/*` | Other `ui/*` files in the same capability                                             | Capability-internal composition |
+| `ui/*` | Third-party UI libs (`lucide-react`, etc.)                                            | Icon and primitive imports      |
 
 UI files **must not** import from:
 
@@ -63,10 +63,10 @@ a use-case hook so the UI never names an action type.
 
 ### Two flavors of component
 
-| Flavor | Where it lives | What it does |
-|---|---|---|
-| **Capability component** | `ui/components/<Name>.tsx` | Knows about this capability's state shape; uses `useTaskContext()` |
-| **Page** | `ui/pages/<Name>.tsx` | Wraps capability components in a layout template, sets `document.title` |
+| Flavor                   | Where it lives             | What it does                                                            |
+| ------------------------ | -------------------------- | ----------------------------------------------------------------------- |
+| **Capability component** | `ui/components/<Name>.tsx` | Knows about this capability's state shape; uses `useTaskContext()`      |
+| **Page**                 | `ui/pages/<Name>.tsx`      | Wraps capability components in a layout template, sets `document.title` |
 
 Generic components (Button, Input, Dialog, Container) live in
 `@/shared/components/` — they accept props and have no awareness of
@@ -74,11 +74,11 @@ any capability's state.
 
 ### Local view-state vs context state
 
-| Concern | Primitive |
-|---|---|
-| Form input value before submit, focus state, modal open/closed | Local `useState` in the component |
-| Anything other components also need to read | Context (`useTaskContext`) → set via use-case hook |
-| Anything that should survive a page navigation | Context (or `application/` slice) |
+| Concern                                                        | Primitive                                          |
+| -------------------------------------------------------------- | -------------------------------------------------- |
+| Form input value before submit, focus state, modal open/closed | Local `useState` in the component                  |
+| Anything other components also need to read                    | Context (`useTaskContext`) → set via use-case hook |
+| Anything that should survive a page navigation                 | Context (or `application/` slice)                  |
 
 If two sibling components both need the same `useState`, lift it to
 context and add a use-case hook for the transition. Don't pass setters
@@ -140,12 +140,12 @@ and the factory live in `application/use-cases.ts` and
 
 ## CSS Modules conventions
 
-| Convention | Why |
-|---|---|
-| One `.module.css` per component, co-located (`MainForm.module.css`) | Scoped styles, no global leakage, easy to find |
-| Class names in `camelCase` (`.formRow`, `.thSort`) | Translates cleanly to `styles.formRow` in JSX |
-| Use design tokens from `@/shared/styles/foundations/` (`var(--primary)`) | Theme switching is one CSS variable swap |
-| Composition with template literals: `` `${styles.button} ${styles[color]}` `` | Variant styling without runtime CSS-in-JS |
+| Convention                                                                    | Why                                            |
+| ----------------------------------------------------------------------------- | ---------------------------------------------- |
+| One `.module.css` per component, co-located (`MainForm.module.css`)           | Scoped styles, no global leakage, easy to find |
+| Class names in `camelCase` (`.formRow`, `.thSort`)                            | Translates cleanly to `styles.formRow` in JSX  |
+| Use design tokens from `@/shared/styles/foundations/` (`var(--primary)`)      | Theme switching is one CSS variable swap       |
+| Composition with template literals: `` `${styles.button} ${styles[color]}` `` | Variant styling without runtime CSS-in-JS      |
 
 Avoid inline `style={{}}` props except for runtime-computed values
 (percentages from state, computed colors). Even then, prefer a CSS
@@ -166,22 +166,26 @@ heavy lifting belongs in a child component or a use-case hook.
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Read state via the capability's context hook (`useTaskContext`) | Pass `state` through 4 levels of props |
-| Call use-case hooks for user intents | Dispatch action types from deep components |
-| Local `useState` / `useRef` for view-only state | Promote every state slice to context |
-| Import from `application/use-cases`, `domain/`, `@/shared/components` | Import from `infrastructure/*` |
-| One component per file (`MainForm.tsx`) | Multiple top-level components in one file |
-| CSS Modules with co-located `*.module.css` | Global stylesheets for component-specific rules |
-| Pages stay boring — wrap, title, compose | Pages do data fetching, state shaping, or formatting |
+| Do                                                                    | Don't                                                |
+| --------------------------------------------------------------------- | ---------------------------------------------------- |
+| Read state via the capability's context hook (`useTaskContext`)       | Pass `state` through 4 levels of props               |
+| Call use-case hooks for user intents                                  | Dispatch action types from deep components           |
+| Local `useState` / `useRef` for view-only state                       | Promote every state slice to context                 |
+| Import from `application/use-cases`, `domain/`, `@/shared/components` | Import from `infrastructure/*`                       |
+| One component per file (`MainForm.tsx`)                               | Multiple top-level components in one file            |
+| CSS Modules with co-located `*.module.css`                            | Global stylesheets for component-specific rules      |
+| Pages stay boring — wrap, title, compose                              | Pages do data fetching, state shaping, or formatting |
 
 ## Testing notes specific to this layer
 
-Components are tested with `@testing-library/react`. Render the
-component inside a provider that supplies a stub context value:
+Components are tested with `@testing-library/react`. Import `TaskContext`
+from the **non-component file** (`use-task-context.ts`), not from the
+provider file, then render the component inside a `Context.Provider`
+that supplies a stub value:
 
 ```tsx
+import { TaskContext } from '../use-task-context';
+
 function renderWithStub(state: Partial<TaskStateModel>) {
   const stub = { state: { ...initialTaskState, ...state }, dispatch: vi.fn() };
   return render(

@@ -299,6 +299,137 @@ logic; if you find a *rule* sneaking into the composition root, move
 it back here. See the template's root `CLAUDE.md` for where the
 composition root file sits in the directory layout.
 
+## Composition root — side-effect wiring
+
+The composition root is the **browser-side-effect seam**. It is the
+only file in the capability where these may legitimately appear at
+the top of the import list:
+
+| Side-effect family   | Examples                                          |
+| -------------------- | ------------------------------------------------- |
+| Persistence          | `localStorage`, `sessionStorage`, `IndexedDB`     |
+| Document / window    | `document.title`, `document.documentElement`      |
+| Web Workers / timers | `Worker`, `setInterval`, `requestAnimationFrame`  |
+| Audio / media        | `AudioContext`, `HTMLMediaElement`                |
+| Networking lifecycle | `EventSource`, `WebSocket` (subscribe long-lived) |
+
+UI components do not own these — they own DOM events on their own
+elements and refs into their own subtree. Infrastructure adapters own
+them when they need a class with lifecycle (see `infrastructure.md`).
+Anything that doesn't fit either of those slots and still has to run
+in the browser belongs in the composition root.
+
+### Subscriptions belong inside `useEffect` — never at the top of the render body
+
+When the composition root wires a vendor adapter's callback
+(`worker.onmessage`, `eventSource.addEventListener`, `audio.onended`,
+`localStorage` cross-tab `storage` events), the subscription **must**
+sit inside a `useEffect`, with the resource in the dependency array.
+Calling the subscription at the top of the component body re-installs
+the handler on every render and — if the callback closes over a
+`useRef` — earns a `react-hooks/refs` violation from the linter.
+
+```tsx
+// ❌ Anti-pattern — subscription at render-time. Re-installed every
+//    render; reading playBeepRef.current here is a ref-during-render bug.
+const worker = TimerWorkerManager.getInstance();
+worker.onmessage((countDownSeconds) => {
+  if (countDownSeconds <= 0) {
+    playBeepRef.current?.();
+    dispatch({ type: ActionTypes.COMPLETE_TASK });
+  }
+});
+
+// ✅ Correct — subscription scoped to a useEffect with the resource
+//    in the deps. Installed once per worker instance; ref access lives
+//    inside the callback, which only runs on actual messages.
+useEffect(() => {
+  worker.onmessage((countDownSeconds) => {
+    if (countDownSeconds <= 0) {
+      playBeepRef.current?.();
+      dispatch({ type: ActionTypes.COMPLETE_TASK });
+    }
+  });
+}, [worker]);
+```
+
+The same rule applies to write-effects (persisting to localStorage,
+syncing `document.title`, posting messages to a Worker on state
+changes): wrap them in a `useEffect` whose deps are the state slices
+those effects read.
+
+### Hydrating state from `localStorage` — the `useReducer` lazy initializer
+
+When the composition root restores persisted state, do it in
+`useReducer`'s **third argument** (the lazy initializer), not in a
+mounting `useEffect`. The third argument runs once before the first
+render, so the UI never flashes the default state on reload.
+
+```tsx
+const [state, dispatch] = useReducer(reducer, initialState, () => {
+  const stored = localStorage.getItem('app_state');
+  if (!stored) return initialState;
+  const parsed = JSON.parse(stored) as AppStateModel;
+  // Strip fields that are unsafe to resume verbatim — e.g. an in-flight
+  // countdown whose wall-clock anchor would now be stale.
+  return { ...parsed, activeTask: null, secondsRemaining: 0 };
+});
+```
+
+Two non-obvious rules in that snippet:
+
+1. **Cast at the boundary.** `JSON.parse(stored) as AppStateModel` is a
+   boundary cast — `localStorage` returns `string`, the type system
+   has no idea what's inside. The composition root is one of the few
+   places where `as Foo` is acceptable; cross-reference the
+   "Boundary casting rule" in `infrastructure.md` — the same rule
+   applies here, with `localStorage` as the boundary.
+2. **Strip in-flight fields on restore.** Any state field that
+   captures a moment-in-time (a countdown's `startDate`, an open
+   socket id, a pending request id) cannot be safely resumed after
+   a reload. The hydrator must reset those to a known-good baseline.
+
+### Provider + hook split — keep the warning from ever appearing
+
+The `react-refresh/only-export-components` rule fires on **any**
+file that mixes component and non-component exports. That means **all**
+non-component exports (the `Context` object itself, the value-type
+interface, the hook) have to live in a separate file from the
+provider component. Splitting on just the hook is not enough — the
+`Context` is also a non-component value and triggers the same rule.
+
+The canonical layout is two files per capability composition root:
+
+```
+capabilities/<name>/
+├── context.tsx           — exports: NoteProvider                                   (component file)
+└── use-context.ts        — exports: NoteContext, NoteContextValue, useNoteContext  (non-component file)
+```
+
+Or, for capabilities that name the provider file after the entity:
+
+```
+capabilities/<name>/
+├── <Name>ContextProvider.tsx   — exports: <Name>ContextProvider                                  (component file)
+└── use-<name>-context.ts        — exports: <Name>Context, <Name>ContextProps, use<Name>Context  (non-component file)
+```
+
+The non-component file holds the `createContext(...)` call, the
+context-value type, and the consumer hook. The provider file
+imports `Context` back from the non-component file to wrap its
+children in `<Context.Provider value={...}>`. UI components import
+**only** the hook (`useNoteContext` / `useTaskContext`) — they
+never reach for the `Context` directly.
+
+This is a deliberate move away from the older colocated pattern
+(provider + hook + context all in `context.tsx` with an
+`eslint-disable-next-line react-refresh/only-export-components`
+directive). Splitting removes the warning at its source, restores
+full Fast Refresh fidelity for edits to either file, and makes the
+dependency graph between hook and provider explicit — the provider
+depends on the hook file (for the Context object), not the other
+way around.
+
 ## Testing notes specific to this layer
 
 Reducers and factories are pure — assert on input/output, no React

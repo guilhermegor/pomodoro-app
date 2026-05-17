@@ -14,13 +14,13 @@ Adapters that talk to the **outside world**: HTTP APIs, browser APIs
 This is the only layer where side effects, framework types, and
 external dependencies are welcome.
 
-| Lives here | Does not live here |
-|---|---|
-| `fetch` calls, HTTP clients | Business rules ("a task ends when…") |
-| Web Worker scripts and managers | State shapes (`*StateModel`) |
-| `localStorage` / `IndexedDB` adapters | React hooks, JSX |
-| Third-party SDK wrappers (toast lib, analytics) | Route definitions |
-| Singleton lifecycle for stateful resources | Action types, reducers |
+| Lives here                                      | Does not live here                   |
+| ----------------------------------------------- | ------------------------------------ |
+| `fetch` calls, HTTP clients                     | Business rules ("a task ends when…") |
+| Web Worker scripts and managers                 | State shapes (`*StateModel`)         |
+| `localStorage` / `IndexedDB` adapters           | React hooks, JSX                     |
+| Third-party SDK wrappers (toast lib, analytics) | Route definitions                    |
+| Singleton lifecycle for stateful resources      | Action types, reducers               |
 
 If a file in this layer has no `fetch`, no `new SomeNativeClass(...)`,
 no `localStorage`, no `import 'third-party-lib'` — it probably belongs
@@ -31,12 +31,12 @@ in `application/`.
 Infrastructure files **must not** import from `application/`, `ui/`,
 or `context.tsx`. Allowed:
 
-| From | To | Why |
-|---|---|---|
-| `infrastructure/*` | `../domain/ports` | The port defines the contract this adapter fulfills |
-| `infrastructure/*` | `../domain/entities`, `../domain/dto`, `../domain/enums` | Adapters translate external data → domain types |
-| `infrastructure/*` | external libraries (`fetch`, `react-toastify`, SDKs) | Adapters wrap external dependencies |
-| `infrastructure/*` | other `infrastructure/*` | Shared helpers within the layer |
+| From               | To                                                       | Why                                                 |
+| ------------------ | -------------------------------------------------------- | --------------------------------------------------- |
+| `infrastructure/*` | `../domain/ports`                                        | The port defines the contract this adapter fulfills |
+| `infrastructure/*` | `../domain/entities`, `../domain/dto`, `../domain/enums` | Adapters translate external data → domain types     |
+| `infrastructure/*` | external libraries (`fetch`, `react-toastify`, SDKs)     | Adapters wrap external dependencies                 |
+| `infrastructure/*` | other `infrastructure/*`                                 | Shared helpers within the layer                     |
 
 **Why so strict here:** the moment infrastructure imports from
 `application/`, you've inverted the dependency direction the
@@ -62,8 +62,12 @@ export interface NoteRepository {
 
 // infrastructure/api-adapter.ts — one implementation
 export class ApiNoteRepository implements NoteRepository {
-  async add(note: Note): Promise<Note> { /* fetch... */ }
-  async list(): Promise<Note[]> { /* fetch... */ }
+  async add(note: Note): Promise<Note> {
+    /* fetch... */
+  }
+  async list(): Promise<Note[]> {
+    /* fetch... */
+  }
 }
 ```
 
@@ -106,12 +110,12 @@ export const showMessage = {
 **Decision rule** — would replacing the external system change any
 domain behavior?
 
-| Swap | Domain reaction | Verdict |
-|---|---|---|
-| `react-toastify` → `sonner` | UI looks different; no domain rule changes | **port-less** |
-| Web Worker → server-side timer | Cycle timing is a domain rule; contract must hold | **port required** |
-| `localStorage` → IndexedDB | Persistence is a domain rule (data survives reload) | **port required** |
-| Animation library swap | Pure presentation | **port-less** |
+| Swap                           | Domain reaction                                     | Verdict           |
+| ------------------------------ | --------------------------------------------------- | ----------------- |
+| `react-toastify` → `sonner`    | UI looks different; no domain rule changes          | **port-less**     |
+| Web Worker → server-side timer | Cycle timing is a domain rule; contract must hold   | **port required** |
+| `localStorage` → IndexedDB     | Persistence is a domain rule (data survives reload) | **port required** |
+| Animation library swap         | Pure presentation                                   | **port-less**     |
 
 When in doubt: if your `domain/` folder has **nothing to say** about
 the external system, the adapter is port-less.
@@ -195,7 +199,9 @@ module-scope singleton pattern:
 let instance: TimerWorkerManager | null = null;
 
 export class TimerWorkerManager implements ITimerWorker {
-  private constructor() { /* ... */ }
+  private constructor() {
+    /* ... */
+  }
 
   static getInstance(): TimerWorkerManager {
     if (!instance) instance = new TimerWorkerManager();
@@ -224,28 +230,28 @@ Three rules for this pattern:
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Implement a port from `../domain/ports` when domain has a stake | Export bare functions that bypass the port |
-| Port-less adapter for purely presentational concerns (toast, modals) | Invent a domain port for UI-only behavior |
-| Cast untyped data at the first line that touches it | Return `unknown` and cast in upper layers |
-| Use `private constructor` + `getInstance()` for stateful resources | Use singletons for stateless HTTP clients |
-| Reset module-scope `instance` to `null` in `terminate()` | Cache a terminated handle and hand it out again |
-| Translate native types (`MessageEvent`, `Response`) to domain types | Leak `MessageEvent` / `AxiosError` into port signatures |
-| Throw with context (`new Error(\`Failed to fetch /notes: ${status}\`)`) | `throw err` with no message — the stack is not enough |
-| One adapter per external system | Cram HTTP + worker + localStorage into one class |
+| Do                                                                      | Don't                                                   |
+| ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| Implement a port from `../domain/ports` when domain has a stake         | Export bare functions that bypass the port              |
+| Port-less adapter for purely presentational concerns (toast, modals)    | Invent a domain port for UI-only behavior               |
+| Cast untyped data at the first line that touches it                     | Return `unknown` and cast in upper layers               |
+| Use `private constructor` + `getInstance()` for stateful resources      | Use singletons for stateless HTTP clients               |
+| Reset module-scope `instance` to `null` in `terminate()`                | Cache a terminated handle and hand it out again         |
+| Translate native types (`MessageEvent`, `Response`) to domain types     | Leak `MessageEvent` / `AxiosError` into port signatures |
+| Throw with context (`new Error(\`Failed to fetch /notes: ${status}\`)`) | `throw err` with no message — the stack is not enough   |
+| One adapter per external system                                         | Cram HTTP + worker + localStorage into one class        |
 
 ## Testing notes specific to this layer
 
 Adapters are tested **end-to-end against a fake of the external
 system**, not via inner mocks. The right tools per resource type:
 
-| Resource | Test approach |
-|---|---|
-| HTTP / REST | MSW (Mock Service Worker) intercepting real `fetch` |
-| Web Worker | Spawn the worker in a test runner with `jsdom-worker` or fake the `Worker` global |
-| `localStorage` / `sessionStorage` | jsdom provides these natively — assert against the real store |
-| Third-party SDK | Wrap in a port, stub the port in upstream tests, integration-test the adapter alone |
+| Resource                          | Test approach                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| HTTP / REST                       | MSW (Mock Service Worker) intercepting real `fetch`                                 |
+| Web Worker                        | Spawn the worker in a test runner with `jsdom-worker` or fake the `Worker` global   |
+| `localStorage` / `sessionStorage` | jsdom provides these natively — assert against the real store                       |
+| Third-party SDK                   | Wrap in a port, stub the port in upstream tests, integration-test the adapter alone |
 
 **Anti-pattern: mocking the adapter to test the use case.** The use
 case accepts the **port interface** as a parameter — pass a hand-rolled
