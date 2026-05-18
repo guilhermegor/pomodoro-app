@@ -187,7 +187,7 @@ that supplies a stub value:
 import { TaskContext } from '../use-task-context';
 
 function renderWithStub(state: Partial<TaskStateModel>) {
-  const stub = { state: { ...initialTaskState, ...state }, dispatch: vi.fn() };
+  const stub = { state: { ...initialTaskState, ...state }, dispatch: jest.fn() };
   return render(
     <TaskContext.Provider value={stub}>
       <ComponentUnderTest />
