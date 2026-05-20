@@ -19,9 +19,13 @@ function ScrollToTop() {
   return null;
 }
 
+// Webpack's DefinePlugin inlines PUBLIC_PATH at build time. react-router
+// rejects a trailing slash on basename, so strip it; '/' (local dev) → ''.
+const basename = (process.env.PUBLIC_PATH || '/').replace(/\/$/, '');
+
 export function MainRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/history/" element={<HistoryPage />} />
