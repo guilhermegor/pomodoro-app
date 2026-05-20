@@ -35,7 +35,8 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Completeness */
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "jest", "@testing-library/jest-dom"]
   },
   "include": ["src/**/*", "jest.setup.ts"],
   "exclude": [
@@ -45,6 +46,6 @@
     "src/**/*.rtk.ts",
     "src/**/*.rtk.tsx",
     "src/**/*.zustand.ts",
-    "src/**/*.zustand.tsx",
+    "src/**/*.zustand.tsx"
   ]
 }

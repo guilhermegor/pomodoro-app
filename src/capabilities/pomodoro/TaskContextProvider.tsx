@@ -1,8 +1,13 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
+
+import { Dialog } from '@/shared/components/Dialog';
+
 import { initialTaskState } from './application/initial-state';
 import { taskReducer } from './application/reducer';
 import { TaskActionTypes } from './domain/enums';
+import { showMessage } from './infrastructure/show-message';
 import { TimerWorkerManager } from './infrastructure/timer-worker-manager';
+import { ToastConfirmPrompt } from './infrastructure/toast-confirm-prompt';
 import { TaskContext } from './use-task-context';
 
 type TaskContextProviderProps = { children: React.ReactNode };
@@ -22,6 +27,7 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
 
   const playBeepRef = useRef<(() => void) | null>(null);
   const worker = TimerWorkerManager.getInstance();
+  const confirmPrompt = useMemo(() => new ToastConfirmPrompt(Dialog), []);
 
   useEffect(() => {
     worker.onmessage((countDownSeconds) => {
@@ -57,7 +63,11 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
     }
   }, [state.activeTask]);
 
-  return <TaskContext.Provider value={{ state, dispatch }}>{children}</TaskContext.Provider>;
+  return (
+    <TaskContext.Provider value={{ state, dispatch, notifier: showMessage, confirmPrompt }}>
+      {children}
+    </TaskContext.Provider>
+  );
 }
 
 function createBeep() {

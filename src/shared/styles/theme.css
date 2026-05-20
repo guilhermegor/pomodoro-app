@@ -1,14 +1,71 @@
+/* Chronos palette — names from May 13 plan, values mapped to
+   * foundations tokens where possible, raw hex otherwise. */
 :root {
-  --color-background: var(--neutral-900);
-  --color-surface:    var(--neutral-800);
-  --color-border:     var(--neutral-700);
+  /* Grays — partial foundations coverage */
+  --gray-100: var(--slate-100); /* #e6e9f0 */
+  --gray-200: #cdd3e1; /* no foundations match */
+  --gray-300: var(--slate-400); /* #aab3cc */
+  --gray-400: var(--slate-600); /* #555f7d */
+  --gray-500: #454f6a; /* no foundations match */
+  --gray-600: #363d56; /* no foundations match */
+  --gray-700: #272f43; /* no foundations match */
+  --gray-800: #181f2e; /* no foundations match */
+  --gray-900: #0a0f1a; /* no foundations match */
+
+  /* Primary brand — fully mapped */
+  --primary-light: var(--color-primary-light);
+  --primary: var(--color-primary);
+  --primary-dark: var(--color-primary-dark);
+
+  /* Links — plan-specific, no foundations match */
+  --link-color: #10b981;
+  --link-hover: #0b8a60;
+
+  /* Status — fully mapped */
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --error: var(--color-error);
+  --info: var(--color-info);
+
+  /* Text-over (contrast) pairs — derived from grays */
+  --text-over-primary: var(--gray-900);
+  --text-over-error: var(--gray-100);
+
+  /* Text — fully mapped */
+  --text-default: var(--color-text-default);
+  --text-muted: var(--color-text-muted);
+  --disabled: var(--color-text-disabled);
+  --text-disabled: var(--color-text-disabled);
+
+  /* react-toastify integration */
+  --toastify-color-success: var(--success);
+  --toastify-color-warning: var(--warning);
+  --toastify-color-error: var(--error);
+  --toastify-color-info: var(--info);
+  --toastify-color-progress-light: var(--primary);
+  --toastify-color-progress-dark: var(--primary);
+  --toastify-text-color-light: var(--gray-900);
+  --toastify-text-color-dark: var(--gray-100);
 }
 
-[data-theme='light'] {
-  --color-background:    var(--neutral-100);
-  --color-surface:       var(--neutral-200);
-  --color-border:        var(--neutral-300);
-  --color-text-default:  var(--neutral-900);
-  --color-text-muted:    var(--neutral-600);
-  --color-text-disabled: var(--neutral-400);
+:root[data-theme='light'] {
+  /* Chronos light-mode convention: invert the gray-* values
+     * by re-binding the same variable names. */
+  --gray-100: #0a0f1a;
+  --gray-200: #181f2e;
+  --gray-300: #272f43;
+  --gray-400: #363d56;
+  --gray-500: #454f6a;
+  --gray-600: #555f7d;
+  --gray-700: #aab3cc;
+  --gray-800: #cdd3e1;
+  --gray-900: #e6e9f0;
+
+  --text-default: #0a0f1a;
+  --text-muted: #272f43;
+  --link-color: #0b8a60;
+  --link-hover: #065f46;
+
+  --toastify-text-color-light: #e6e9f0;
+  --toastify-text-color-dark: #e6e9f0;
 }

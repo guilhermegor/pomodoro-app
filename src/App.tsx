@@ -1,9 +1,13 @@
-import { ExamplePage, NoteProvider } from '@/capabilities/example';
+import { TaskContextProvider } from './capabilities/pomodoro';
+import { MainRouter } from './routes/MainRouter';
+import { MessagesContainer } from './shared/components/MessagesContainer';
 
-const App = () => (
-  <NoteProvider>
-    <ExamplePage />
-  </NoteProvider>
-);
-
-export default App;
+export function App() {
+  return (
+    <TaskContextProvider>
+      <MessagesContainer>
+        <MainRouter />
+      </MessagesContainer>
+    </TaskContextProvider>
+  );
+}

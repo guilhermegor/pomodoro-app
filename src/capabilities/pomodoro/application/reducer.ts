@@ -1,4 +1,5 @@
 import { TaskActionTypes } from '../domain/enums';
+
 import { TaskActionModel } from './actions';
 import { initialTaskState } from './initial-state';
 import { TaskStateModel } from './state';

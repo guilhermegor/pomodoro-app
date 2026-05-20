@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+
 import { TaskModel } from '../domain/entities';
 
 export function formatSecondsToMinutes(seconds: number): string {
@@ -32,7 +33,7 @@ export type SortTasksOptions = {
   tasks: TaskModel[];
   direction?: 'asc' | 'desc';
   field?: keyof TaskModel;
-}
+};
 
 export function sortTasks({
   field = 'startDate',
@@ -52,9 +53,7 @@ export function sortTasks({
     }
 
     if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return direction === 'asc'
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+      return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
     }
 
     return 0;

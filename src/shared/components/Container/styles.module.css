@@ -4,5 +4,5 @@
 }
 
 .content {
-  margin: 3.2rem;
+  margin: clamp(1.6rem, 5vw, 3.2rem);
 }

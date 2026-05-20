@@ -1,6 +1,7 @@
-import type { ToastContentProps } from 'react-toastify';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ToastContentProps } from 'react-toastify';
+
 import { Dialog } from './index';
 
 function stubProps(closeToast: (v: boolean) => void): ToastContentProps<string> {
